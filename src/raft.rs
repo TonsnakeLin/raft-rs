@@ -1318,6 +1318,14 @@ impl<T: Storage> Raft<T> {
     /// message from a peer.
     pub fn step(&mut self, m: Message) -> Result<()> {
         // Handle the message term, which may result in our stepping down to a follower.
+        if m.get_print_info() {
+            info!(self.logger, 
+                "Raft::step";
+                "Message" => ?m,
+                "m.term" => m.term,
+                "self.term" => self.term,
+                "thread" => ?std::thread::current().name());
+        }
         if m.term == 0 {
             // local message
         } else if m.term > self.term {

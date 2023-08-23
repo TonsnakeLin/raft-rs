@@ -362,6 +362,13 @@ impl<T: Storage> RawNode<T> {
         e.data = data.into();
         e.context = context.into();
         m.set_entries(vec![e].into());
+        m.set_print_info(self.print_info);
+        if self.print_info {
+            info!(self.raft.logger, 
+            "RawNode::propose";
+            "Message" => ?m,
+            "thread" => ?std::thread::current().name());
+        }
         self.raft.step(m)
     }
 
