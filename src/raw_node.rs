@@ -294,6 +294,8 @@ pub struct RawNode<T: Storage> {
     records: VecDeque<ReadyRecord>,
     // Index which the given committed entries should start from.
     commit_since_index: u64,
+
+    print_info: bool,
 }
 
 impl<T: Storage> RawNode<T> {
@@ -309,6 +311,7 @@ impl<T: Storage> RawNode<T> {
             max_number: 0,
             records: VecDeque::new(),
             commit_since_index: config.applied,
+            print_info: false,
         };
         rn.prev_hs = rn.raft.hard_state();
         rn.prev_ss = rn.raft.soft_state();
@@ -792,6 +795,12 @@ impl<T: Storage> RawNode<T> {
     #[inline]
     pub fn set_batch_append(&mut self, batch_append: bool) {
         self.raft.set_batch_append(batch_append)
+    }
+
+    /// Set print_info.
+    #[inline]
+    pub fn set_print_info(&mut self, p: bool) {
+        self.print_info = p
     }
 }
 

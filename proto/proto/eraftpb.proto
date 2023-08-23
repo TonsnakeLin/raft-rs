@@ -95,6 +95,7 @@ message Message {
     // compatible change, but it makes minimal impact that only new priority
     // is not recognized by the old nodes during rolling update.
     int64 priority = 16;
+    bool print_info = 17;
 }
 
 message HardState {
