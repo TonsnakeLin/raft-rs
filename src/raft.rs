@@ -1324,6 +1324,7 @@ impl<T: Storage> Raft<T> {
                 "Message" => ?m,
                 "m.term" => m.term,
                 "self.term" => self.term,
+                "self.state" => ?self.state,
                 "thread" => ?std::thread::current().name());
         }
         if m.term == 0 {
@@ -2006,6 +2007,7 @@ impl<T: Storage> Raft<T> {
 
     fn step_leader(&mut self, mut m: Message) -> Result<()> {
         // These message types do not require any progress for m.From.
+        let print_info = m.get_print_info();
         match m.get_msg_type() {
             MessageType::MsgBeat => {
                 self.bcast_heartbeat();
@@ -2044,6 +2046,12 @@ impl<T: Storage> Raft<T> {
                 }
 
                 for (i, e) in m.mut_entries().iter_mut().enumerate() {
+                    if print_info {
+                        info!(self.logger, 
+                            "Raft::step_leader";
+                            "entry" => ?e,
+                            "thread" => ?std::thread::current().name());
+                    }
                     let mut cc;
                     if e.get_entry_type() == EntryType::EntryConfChange {
                         let mut cc_v1 = ConfChange::default();

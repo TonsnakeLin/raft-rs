@@ -30,6 +30,7 @@ message Entry {
     // Deprecated! It is kept for backward compatibility.
     // TODO: remove it in the next major release.
     bool sync_log = 5;
+    bool print_info = 7;
 }
 
 message SnapshotMetadata {
