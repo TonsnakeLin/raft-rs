@@ -256,6 +256,8 @@ pub struct RaftCore<T: Storage> {
 
     /// Max size per committed entries in a `Read`.
     pub(crate) max_committed_size_per_ready: u64,
+
+    pub print_info: bool,
 }
 
 /// A struct that represents the raft consensus itself. Stores details concerning the current
@@ -364,6 +366,7 @@ impl<T: Storage> Raft<T> {
                     last_log_tail_index: 0,
                 },
                 max_committed_size_per_ready: c.max_committed_size_per_ready,
+                print_info: false,
             },
         };
         confchange::restore(&mut r.prs, r.r.raft_log.last_index(), conf_state)?;
@@ -614,6 +617,15 @@ impl<T: Storage> RaftCore<T> {
         if m.from == INVALID_ID {
             m.from = self.id;
         }
+        if m.get_print_info() {
+            info!(self.logger, 
+                "RaftCore::send";
+                "msgsLen" => msgs.len(),
+                "from" => self.id,
+                "to" => m.to,
+                "msg" => ?m,
+                "thread" => ?std::thread::current().name());  
+        }
         if m.get_msg_type() == MessageType::MsgRequestVote
             || m.get_msg_type() == MessageType::MsgRequestPreVote
             || m.get_msg_type() == MessageType::MsgRequestVoteResponse
@@ -715,6 +727,16 @@ impl<T: Storage> RaftCore<T> {
             to;
             "progress" => ?pr,
         );
+        if m.get_print_info() {
+            info!(self.logger, 
+                "RaftCore::prepare_send_snapshot";
+                "first_index" => self.raft_log.first_index(),
+                "committed" => self.raft_log.committed,
+                "snapshot_index" => sindex,
+                "snapshot_term" => sterm,
+                "to" => to,
+                "thread" => ?std::thread::current().name());              
+        }
         true
     }
 
@@ -790,6 +812,16 @@ impl<T: Storage> RaftCore<T> {
         allow_empty: bool,
         msgs: &mut Vec<Message>,
     ) -> bool {
+        if self.print_info {
+            info!(self.logger, 
+                "RaftCore::maybe_send_append";
+                "msgsLen" => msgs.len(),
+                "allow_empty" => allow_empty,
+                "pr" => ?pr,
+                "to" => to,
+                "batch_append" => self.batch_append,
+                "thread" => ?std::thread::current().name());  
+        }
         if pr.is_paused() {
             trace!(
                 self.logger,
@@ -801,6 +833,7 @@ impl<T: Storage> RaftCore<T> {
         }
         let mut m = Message::default();
         m.to = to;
+        m.set_print_info(self.print_info);
         if pr.pending_request_snapshot != INVALID_INDEX {
             // Check pending request snapshot first to avoid unnecessary loading entries.
             if !self.prepare_send_snapshot(&mut m, pr, to) {
@@ -866,6 +899,10 @@ impl<T: Storage> RaftCore<T> {
             m.context = context.into();
         }
         self.send(m, msgs);
+    }
+
+    pub fn set_print_info(&mut self, p: bool) {
+        self.print_info = p;
     }
 }
 

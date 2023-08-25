@@ -361,6 +361,7 @@ impl<T: Storage> RawNode<T> {
         let mut e = Entry::default();
         e.data = data.into();
         e.context = context.into();
+        e.set_print_info(self.print_info);
         m.set_entries(vec![e].into());
         m.set_print_info(self.print_info);
         if self.print_info {
@@ -369,6 +370,7 @@ impl<T: Storage> RawNode<T> {
             "Message" => ?m,
             "thread" => ?std::thread::current().name());
         }
+        self.raft.set_print_info(self.print_info);
         self.raft.step(m)
     }
 
