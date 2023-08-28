@@ -58,6 +58,15 @@ pub struct RaftLog<T: Storage> {
     pub applied: u64,
 }
 
+impl<T> std::fmt::Debug for RaftLog<T>
+where 
+    T: Storage,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "RaftLog [{}]", self.to_string())
+    }
+}
+
 impl<T> ToString for RaftLog<T>
 where
     T: Storage,

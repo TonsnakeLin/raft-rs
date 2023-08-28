@@ -284,6 +284,7 @@ impl LightReady {
 /// RawNode is a thread-unsafe Node.
 /// The methods of this struct correspond to the methods of Node and are described
 /// more fully there.
+#[derive(Debug)]
 pub struct RawNode<T: Storage> {
     /// The internal raft state.
     pub raft: Raft<T>,

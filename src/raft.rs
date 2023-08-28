@@ -88,6 +88,7 @@ pub struct SoftState {
 
 /// UncommittedState is used to keep track of information of uncommitted
 /// log entries on 'leader' node
+#[derive(Debug)]
 struct UncommittedState {
     /// Specify maximum of uncommitted entry size.
     /// When this limit is reached, all proposals to append new log will be dropped
@@ -155,7 +156,7 @@ impl UncommittedState {
 /// The core struct of raft consensus.
 ///
 /// It's a helper struct to get around rust borrow checks.
-#[derive(Getters)]
+#[derive(Getters, std::fmt::Debug)]
 pub struct RaftCore<T: Storage> {
     /// The current election term.
     pub term: u64,
@@ -262,6 +263,7 @@ pub struct RaftCore<T: Storage> {
 
 /// A struct that represents the raft consensus itself. Stores details concerning the current
 /// and possible state the system can take.
+#[derive(std::fmt::Debug)]
 pub struct Raft<T: Storage> {
     prs: ProgressTracker,
 
