@@ -810,7 +810,8 @@ impl<T: Storage> RawNode<T> {
     /// Set print_info.
     #[inline]
     pub fn set_print_info(&mut self, p: bool) {
-        self.print_info = p
+        self.print_info = p;
+        self.raft.set_print_info(p);
     }
 }
 
