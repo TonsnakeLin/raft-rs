@@ -2521,6 +2521,7 @@ impl<T: Storage> Raft<T> {
         let mut to_send = Message::default();
         to_send.to = m.from;
         to_send.set_msg_type(MessageType::MsgAppendResponse);
+        to_send.set_print_info(m.get_print_info());
 
         if let Some((_, last_idx)) = self
             .raft_log
