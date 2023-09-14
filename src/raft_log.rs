@@ -200,6 +200,12 @@ impl<T: Storage> RaftLog<T> {
                         "conflicting term" => e.term,
                     );
                 }
+                if e.get_print_info() {
+                    info!(self.unstable.logger,
+                    "find_conflict"; 
+                    "conflict-index" => e.index,
+                    "thread" => ?std::thread::current().name());
+                }
                 return e.index;
             }
         }
