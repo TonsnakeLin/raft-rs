@@ -16,6 +16,7 @@
 
 use std::cmp;
 use std::convert::TryFrom;
+use std::fmt::format;
 use std::ops::{Deref, DerefMut};
 
 use crate::eraftpb::{
@@ -331,6 +332,11 @@ impl<T: Storage> Raft<T> {
         let voters = &conf_state.voters;
         let learners = &conf_state.learners;
 
+        info!(logger, 
+            "Raft::new";
+            "conf_state" => ?conf_state
+        );
+
         let mut r = Raft {
             prs: ProgressTracker::with_capacity(voters.len(), learners.len(), c.max_inflight_msgs),
             msgs: Default::default(),
@@ -371,7 +377,20 @@ impl<T: Storage> Raft<T> {
                 print_info: false,
             },
         };
+        r.set_print_info(true);
+        info!(
+            r.logger,
+            "Raft::new before restore";
+            "r.prs" => ?r.prs,
+            "r.r" => ? r.r.print_imp_info()
+        );
         confchange::restore(&mut r.prs, r.r.raft_log.last_index(), conf_state)?;
+        info!(
+            r.logger,
+            "Raft::new after restore";
+            "r.prs" => ?r.prs,
+            "r.r" => ? r.r.print_imp_info()
+        );
         let new_cs = r.post_conf_change();
         if !raft_proto::conf_state_eq(&new_cs, conf_state) {
             fatal!(
@@ -905,6 +924,24 @@ impl<T: Storage> RaftCore<T> {
 
     pub fn set_print_info(&mut self, p: bool) {
         self.print_info = p;
+    }
+
+    pub fn print_imp_info(& self) -> String {
+        format!(
+            "term = {}, vote = {}, id = {}, raft_log = {:?}, state = {:?}, promotable = {}, 
+            leader_id = {}, lead_transferee {:?}, check_quorum {}, pre_vote {}, skip_bcast_commit = {}",
+            self.term,
+            self.vote,
+            self.id,
+            self.raft_log.to_string(),
+            self.state, 
+            self.promotable, 
+            self.leader_id,
+            self.lead_transferee, 
+            self.check_quorum, 
+            self.pre_vote, 
+            self.skip_bcast_commit,
+        )
     }
 }
 
