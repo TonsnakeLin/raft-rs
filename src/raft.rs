@@ -1370,6 +1370,9 @@ impl<T: Storage> Raft<T> {
             if campaign_type == CAMPAIGN_TRANSFER {
                 m.context = campaign_type.into();
             }
+            if self.print_info {
+                m.set_print_info(true);
+            }
             self.r.send(m, &mut self.msgs);
         }
         if voter_cnt > 0 {
@@ -1565,6 +1568,7 @@ impl<T: Storage> Raft<T> {
                         new_message(m.from, vote_resp_msg_type(m.get_msg_type()), None);
                     to_send.reject = false;
                     to_send.term = m.term;
+                    to_send.set_print_info(m.get_print_info());
                     self.r.send(to_send, &mut self.msgs);
                     if m.get_msg_type() == MessageType::MsgRequestVote {
                         // Only record real votes.
@@ -1580,6 +1584,7 @@ impl<T: Storage> Raft<T> {
                     let (commit, commit_term) = self.raft_log.commit_info();
                     to_send.commit = commit;
                     to_send.commit_term = commit_term;
+                    to_send.set_print_info(m.get_print_info());
                     self.r.send(to_send, &mut self.msgs);
                     self.maybe_commit_by_vote(&m);
                 }
@@ -2084,6 +2089,13 @@ impl<T: Storage> Raft<T> {
     fn step_leader(&mut self, mut m: Message) -> Result<()> {
         // These message types do not require any progress for m.From.
         let print_info = m.get_print_info();
+        if print_info {
+            info!(
+                self.logger,
+                "step_follower";
+                "m" => ?m,
+                "thread" => ?std::thread::current().name()); 
+        }
         match m.get_msg_type() {
             MessageType::MsgBeat => {
                 self.bcast_heartbeat();
@@ -2343,6 +2355,13 @@ impl<T: Storage> Raft<T> {
     // step_candidate is shared by state Candidate and PreCandidate; the difference is
     // whether they respond to MsgRequestVote or MsgRequestPreVote.
     fn step_candidate(&mut self, m: Message) -> Result<()> {
+        if self.print_info {
+            info!(
+            self.logger,
+            "step_candidate";
+            "m" => ?m,
+            "thread" => ?std::thread::current().name());
+        }
         match m.get_msg_type() {
             MessageType::MsgPropose => {
                 info!(
@@ -2395,6 +2414,13 @@ impl<T: Storage> Raft<T> {
     }
 
     fn step_follower(&mut self, mut m: Message) -> Result<()> {
+        if m.get_print_info() {
+            info!(
+                self.logger,
+                "step_follower";
+                "m" => ?m,
+                "thread" => ?std::thread::current().name()); 
+        }
         match m.get_msg_type() {
             MessageType::MsgPropose => {
                 if self.leader_id == INVALID_ID {

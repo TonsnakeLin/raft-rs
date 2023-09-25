@@ -351,6 +351,7 @@ impl<T: Storage> RawNode<T> {
     pub fn campaign(&mut self) -> Result<()> {
         let mut m = Message::default();
         m.set_msg_type(MessageType::MsgHup);
+        m.set_print_info(self.print_info);
         self.raft.step(m)
     }
 
