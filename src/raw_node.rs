@@ -419,7 +419,13 @@ impl<T: Storage> RawNode<T> {
             return Err(Error::StepLocalMsg);
         }
         if self.raft.prs().get(m.from).is_some() || !is_response_msg(m.get_msg_type()) {
-            return self.raft.step(m);
+            let p_orig = self.print_info;
+            if m.get_print_info() {
+                self.set_print_info(true);
+            }
+            let r = self.raft.step(m);
+            self.set_print_info(p_orig);
+            return r;
         }
         Err(Error::StepPeerNotFound)
     }

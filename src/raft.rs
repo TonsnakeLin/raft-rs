@@ -2355,7 +2355,7 @@ impl<T: Storage> Raft<T> {
     // step_candidate is shared by state Candidate and PreCandidate; the difference is
     // whether they respond to MsgRequestVote or MsgRequestPreVote.
     fn step_candidate(&mut self, m: Message) -> Result<()> {
-        if self.print_info {
+        if m.print_info {
             info!(
             self.logger,
             "step_candidate";
