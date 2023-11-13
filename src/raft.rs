@@ -588,7 +588,7 @@ impl<T: Storage> Raft<T> {
             return None;
         }
         let (index, use_group_commit) = self.mut_prs().maximal_committed_index();
-        debug!(
+        info!(
             self.logger,
             "check group commit consistent";
             "index" => index,
@@ -1007,6 +1007,11 @@ impl<T: Storage> Raft<T> {
     /// changed (in which case the caller should call `r.bcast_append`).
     pub fn maybe_commit(&mut self) -> bool {
         let mci = self.mut_prs().maximal_committed_index().0;
+        info!(
+            self.logger,
+            "check group commit consistent";
+            "committed" => ?self.prs()
+        );
         if self.r.raft_log.maybe_commit(mci, self.r.term) {
             let (self_id, committed) = (self.id, self.raft_log.committed);
             self.mut_prs()
